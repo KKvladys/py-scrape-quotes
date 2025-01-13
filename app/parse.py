@@ -33,18 +33,22 @@ def get_quotes_from_page(base_url: str) -> list[Quote]:
     text = requests.get(base_url).text
     soup = BeautifulSoup(text, "html.parser")
     quotes = soup.select(".quote")
+
+    all_quotes = [parse_single_quote(quote) for quote in quotes]
+
     next_page = soup.select_one(".next a")
+
     while next_page:
-
         url_to_parse = urljoin(BASE_URL, next_page.get("href"))
-
         text = requests.get(url_to_parse).text
         soup = BeautifulSoup(text, "html.parser")
-        new_quotes = soup.select(".quote")
-        quotes.extend(new_quotes)
+
+        quotes = soup.select(".quote")
+        all_quotes.extend(parse_single_quote(quote) for quote in quotes)
+
         next_page = soup.select_one(".next a")
 
-    return [parse_single_quote(quote) for quote in quotes]
+    return all_quotes
 
 
 def write_quotes_to_csv(path: str, quotes: list[Quote]) -> None:
